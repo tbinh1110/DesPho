@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # 1. MESSAGE BROKER (Hàng đợi)
+  redis:
+    image: redis:7-alpine
+    container_name: despho_redis
+    ports:
+      - "6379:6379"
+    restart: always
+
+  # 2. WEB SERVER (Nhận Request từ Frontend)
+  web:
+    build: .
+    container_name: despho_web
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app  
+      - ai_models_cache:/root/.cache 
+    depends_on:
+      - redis
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    deploy: &gpu_config
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  worker:
+    build: .
+    container_name: despho_worker
+    # Lệnh này sẽ được dùng khi bạn viết xong file Celery, hiện tại nó sẽ đợi
+    command: celery -A worker.celery_app worker --loglevel=info -P threads
+    volumes:
+      - .:/app
+      - ai_models_cache:/root/.cache
+    depends_on:
+      - redis
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    deploy: *gpu_config 
+
+volumes:
+  ai_models_cache:
+    

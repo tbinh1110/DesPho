@@ -1,0 +1,22 @@
+--extra-index-url https://download.pytorch.org/whl/cu121
+torch
+torchvision
+torchaudio
+fastapi
+uvicorn
+python-multipart
+pydantic-settings
+httpx
+pillow
+numpy
+opencv-python
+rembg
+ultralytics
+openai
+diffusers
+transformers
+accelerate
+cloudinary
+celery
+redis
+simple_lama_inpainting

@@ -1,0 +1,55 @@
+services:
+  # Nginx điều phối cổng 80
+  nginx:
+    image: nginx:stable-alpine
+    ports: ["80:80"]
+    volumes:
+      - .:/var/www/html
+      - ./docker/nginx:/etc/nginx/conf.d
+    depends_on: [app]
+
+  # Laravel App
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile # Đảm bảo trỏ đúng file Dockerfile có pdo_pgsql
+    container_name: despho_api
+    volumes:
+      - .:/var/www/html
+      - /etc/localtime:/etc/localtime:ro # Đồng bộ giờ máy thật vào container
+      - /etc/timezone:/etc/timezone:ro
+    environment:
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: despho_db
+      DB_USERNAME: postgres
+      DB_PASSWORD: secret_password
+      REDIS_HOST: redis
+      # Ép Laravel dùng file cache để tránh lỗi khi DB chưa sẵn sàng
+      CACHE_STORE: file
+    depends_on:
+      - postgres
+      - redis
+
+  # Cơ sở dữ liệu PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: despho_db
+    environment:
+      POSTGRES_DB: despho_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret_password
+    ports:
+      - "5432:5432" # Mở cổng để bạn có thể check bằng TablePlus/Navicat
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Message Broker Redis
+  redis:
+    image: redis:7-alpine
+    container_name: despho_redis
+    command: redis-server --appendonly yes
+
+volumes:
+  postgres_data:

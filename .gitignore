@@ -1,0 +1,21 @@
+# Frontend (React/Vite)
+Frontend/node_modules/
+Frontend/dist/
+Frontend/.env.local
+
+# Backend (Laravel)
+Backend/vendor/
+Backend/.env
+Backend/storage/*.key
+Backend/public/storage
+
+# AI (Python)
+AI/__pycache__/
+AI/venv/
+AI/.venv/
+AI/*.ipynb_checkpoints/
+AI/data/
+
+# Chung
+.DS_Store
+.vscode/
